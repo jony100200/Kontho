@@ -3,10 +3,14 @@
 </p>
 
 <p align="center">
-  <strong>Universal Local Voice Typing for Windows — Bengali & English Code-Switching for Developers and Creators</strong>
+  <strong>Universal Local Voice Typing for Windows — Bengali & English Code-Switching</strong>
+  <br>
+  Developed by <strong>Jony</strong> @ <strong>Kalponic Studio</strong>
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Studio-Kalponic%20Studio-E11D48?style=flat-square" alt="Kalponic Studio">
+  <img src="https://img.shields.io/badge/Developer-Jony-blue?style=flat-square" alt="Jony">
   <img src="https://img.shields.io/badge/Privacy-100%25_Local-0078D4?style=flat-square" alt="100% Local">
   <img src="https://img.shields.io/badge/Languages-Bengali%20%2B%20English-2ea44f?style=flat-square" alt="Bengali + English">
   <img src="https://img.shields.io/badge/Engine-whisper.cpp-orange?style=flat-square" alt="whisper.cpp">
@@ -58,8 +62,9 @@ On first launch, Kontho starts in the system tray and displays an unobtrusive fl
 
 | Action | Control |
 |---|---|
-| **Dictate** | **Hold `Ctrl + Shift + Space`**, speak, and release (Push-to-Talk). Switch to toggle mode in Settings. |
-| **Open Settings** | Double-click the floating pill or right-click the system tray icon. |
+| **Dictate** | **Hold or press hotkey** (`Ctrl + Shift + Space`, `F8`, etc.), speak, and release/press again. |
+| **Click Floating Pill** | Single-click to start/stop listening. |
+| **Open Settings** | Double-click or right-click the floating pill, or right-click the system tray icon. |
 | **Move Floating Pill** | Click and drag the pill anywhere. It snaps cleanly to screen edges and remembers its position across reboots. |
 | **Hide / Show Pill** | Left-click the system tray icon. |
 
@@ -124,6 +129,19 @@ python tests\record_test_voice.py --mixed  # Record 5s Mixed sample (mixed_sampl
 
 ---
 
+## Author & Studio
+
+<p align="center">
+  <img src="Assets/Kalponic Studio Icon.png" alt="Kalponic Studio Logo" width="80">
+  <br>
+  <strong>Kalponic Studio</strong>
+  <br>
+  Lead Developer: <strong>Jony</strong>
+</p>
+
+---
+
 ## Architecture & Standards
 
 Kontho adheres strictly to the workspace engineering standards defined in `D:\KSAppDev\KS_ENGINEERING_STANDARD.md` and `D:\KSAppDev\Kontho\AGENTS.md`.
+
