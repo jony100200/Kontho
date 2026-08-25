@@ -25,6 +25,7 @@ from ..core.models import ModelRegistry
 from ..core.settings import SettingsStore
 from .overlay import FloatingOverlay
 from .settings_window import SettingsWindow
+from .theme import STUDIO_DARK_QSS
 from .tray import KonthoTray
 
 log = logging.getLogger("kontho.app")
@@ -43,6 +44,7 @@ class KonthoApp:
         self.qt = QApplication(argv or sys.argv)
         self.qt.setApplicationName("Kontho")
         self.qt.setQuitOnLastWindowClosed(False)   # tray app: closing a window is not quitting
+        self.qt.setStyleSheet(STUDIO_DARK_QSS)
 
         icon_path = Path(__file__).resolve().parents[2] / "Assets" / "Kontho Icon.png"
         self.app_icon = None

@@ -123,14 +123,16 @@ class FloatingOverlay(QWidget):
         path = QPainterPath()
         rect = self.rect().adjusted(0, 0, -1, -1)
         path.addRoundedRect(rect, 14, 14)
-        painter.fillPath(path, QColor(28, 32, 40, 235))
+        painter.fillPath(path, QColor(18, 19, 22, 240))
 
         # Highlight border when audio is actively being detected
         vol = getattr(self, "_volume", 0.0)
         if self._state is State.LISTENING and vol > 0.08:
-            painter.strokePath(path, QColor(191, 97, 106, 230))
+            painter.strokePath(path, QColor(239, 68, 68, 230))
+        elif self._state is State.LISTENING:
+            painter.strokePath(path, QColor(191, 97, 106, 180))
         else:
-            painter.strokePath(path, QColor(70, 80, 96, 220))
+            painter.strokePath(path, QColor(46, 51, 66, 220))
 
     def _paint_state(self, state: State, detail: str) -> None:
         colour, text_colour, label = STATE_COLOURS.get(state, STATE_COLOURS[State.READY])
