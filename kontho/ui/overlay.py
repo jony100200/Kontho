@@ -15,9 +15,10 @@ WS_EX_TOOLWINDOW also keeps it out of Alt+Tab, which is what the spec asks for.
 from __future__ import annotations
 
 import logging
+import math
 from pathlib import Path
 
-from PySide6.QtCore import QPoint, Qt, Signal
+from PySide6.QtCore import QPoint, QRectF, Qt, Signal, QTimer
 from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QWidget
 
@@ -31,18 +32,96 @@ WS_EX_TOPMOST = 0x00000008
 GWL_EXSTYLE = -20
 
 STATE_COLOURS = {
-    State.READY: ("#3B4252", "#D8DEE9", "Ready"),
-    State.LISTENING: ("#BF616A", "#FFFFFF", "Listening"),
-    State.PROCESSING: ("#D08770", "#FFFFFF", "Working"),
-    State.INSERTED: ("#A3BE8C", "#2E3440", "Inserted"),
+    State.READY: ("#00D2FF", "#D8DEE9", "Ready"),
+    State.LISTENING: ("#FF4B5C", "#FFFFFF", "Listening"),
+    State.PROCESSING: ("#FFB703", "#FFFFFF", "Working"),
+    State.INSERTED: ("#10B981", "#2E3440", "Inserted"),
     State.NO_TARGET: ("#EBCB8B", "#2E3440", "No target"),
-    State.ERROR: ("#B48EAD", "#FFFFFF", "Error"),
-    State.LOADING: ("#5E81AC", "#FFFFFF", "Loading"),
+    State.ERROR: ("#EF4444", "#FFFFFF", "Error"),
+    State.LOADING: ("#6366F1", "#FFFFFF", "Loading"),
 }
 
 
+class AudioHeartbeatWidget(QWidget):
+    """Animated 4-bar dynamic audio equalizer / heartbeat wave.
+
+    Bounces in real-time to speech volume during LISTENING,
+    shows wave pulses during PROCESSING, and resting soft pulse when READY.
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setFixedSize(22, 16)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._volume = 0.0
+        self._state = State.READY
+        self._phase = 0.0
+        self._timer = QTimer(self)
+        self._timer.setInterval(30)  # ~33 FPS smooth wave
+        self._timer.timeout.connect(self._on_tick)
+
+    def set_state(self, state: State, volume: float = 0.0) -> None:
+        self._state = state
+        self._volume = max(0.0, min(1.0, volume))
+        if state in (State.LISTENING, State.PROCESSING) and not self._timer.isActive():
+            self._timer.start()
+        elif state not in (State.LISTENING, State.PROCESSING) and self._timer.isActive():
+            self._timer.stop()
+            self._phase = 0.0
+        self.update()
+
+    def _on_tick(self) -> None:
+        self._phase += 0.25
+        if self._phase > 6.283:
+            self._phase -= 6.283
+        self.update()
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(Qt.NoPen)
+
+        if self._state is State.LISTENING:
+            color = QColor(255, 75, 92) if self._volume > 0.04 else QColor(220, 90, 105)
+        elif self._state is State.PROCESSING:
+            color = QColor(255, 183, 3)
+        elif self._state is State.INSERTED:
+            color = QColor(16, 185, 129)
+        elif self._state in (State.ERROR, State.NO_TARGET):
+            color = QColor(239, 68, 68)
+        elif self._state is State.LOADING:
+            color = QColor(99, 102, 241)
+        else:
+            color = QColor(0, 210, 255)
+
+        painter.setBrush(color)
+
+        bar_w = 3.0
+        gap = 2.0
+        max_h = 14.0
+        min_h = 3.0
+        mid_y = 8.0
+
+        offsets = [0.4, 1.0, 0.8, 0.5]
+        for i in range(4):
+            x = i * (bar_w + gap) + 1.0
+            if self._state is State.LISTENING:
+                amp = max(0.18, min(1.0, self._volume * 1.5 * offsets[i]))
+                h = min_h + (max_h - min_h) * amp
+            elif self._state is State.PROCESSING:
+                wave = (math.sin(self._phase + i * 0.8) + 1.0) / 2.0
+                h = min_h + (max_h - min_h) * (0.25 + 0.75 * wave)
+            elif self._state is State.INSERTED:
+                h = max_h * 0.85
+            else:
+                h = min_h + 1.0
+
+            y = mid_y - h / 2.0
+            painter.drawRoundedRect(QRectF(x, y, bar_w, h), 1.5, 1.5)
+
+
 class FloatingOverlay(QWidget):
-    """Small always-on-top pill that shows state and a live preview."""
+    """Small always-on-top pill that shows state, audio heartbeat, and live preview."""
 
     clicked = Signal()
 
@@ -51,6 +130,7 @@ class FloatingOverlay(QWidget):
         self._settings = settings_store
         self._drag_origin: QPoint | None = None
         self._state = State.READY
+        self._volume = 0.0
         self._applied_native_style = False
 
         self.setWindowFlags(
@@ -74,8 +154,7 @@ class FloatingOverlay(QWidget):
             self._icon_lbl.setPixmap(pix)
             layout.addWidget(self._icon_lbl)
 
-        self._dot = QLabel("●")
-        self._dot.setFont(QFont("Segoe UI", 11))
+        self._heartbeat = AudioHeartbeatWidget(self)
         self._label = QLabel("Kontho")
         self._label.setFont(QFont("Segoe UI", 9, QFont.DemiBold))
         self._preview = QLabel("")
@@ -83,7 +162,7 @@ class FloatingOverlay(QWidget):
         self._preview.setMaximumWidth(420)
         self._preview.hide()
 
-        layout.addWidget(self._dot)
+        layout.addWidget(self._heartbeat)
         layout.addWidget(self._label)
         layout.addWidget(self._preview)
 
@@ -137,12 +216,7 @@ class FloatingOverlay(QWidget):
     def _paint_state(self, state: State, detail: str) -> None:
         colour, text_colour, label = STATE_COLOURS.get(state, STATE_COLOURS[State.READY])
         vol = getattr(self, "_volume", 0.0)
-        if state is State.LISTENING and vol > 0.08:
-            self._dot.setStyleSheet("color: #FF7B87; font-weight: bold;")
-            self._dot.setText("◉")
-        else:
-            self._dot.setStyleSheet(f"color: {colour};")
-            self._dot.setText("●")
+        self._heartbeat.set_state(state, vol)
 
         self._label.setStyleSheet("color: #E5E9F0;")
         self._label.setText(label if not detail else f"{label} · {detail}"[:52])
