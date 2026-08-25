@@ -3,8 +3,20 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# Pytest
+# Environments & IDEs
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Pytest & build caches
 .pytest_cache/
+build/
+dist/
+*.egg-info/
 
 # Local data & models
 *.part
@@ -13,3 +25,12 @@ __pycache__/
 
 # Logs
 *.log
+
+# Internal audit notes & local documentation
+_Docs/AUDIT_V1.md
+_Docs/AUDIT*.md
+
+# User voice recordings (privacy preservation)
+tests/audio/*_sample.wav
+tests/audio/bn_sample.wav
+tests/audio/mixed_sample.wav
