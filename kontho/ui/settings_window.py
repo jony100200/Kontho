@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -45,6 +46,60 @@ from ..core.settings import (
 log = logging.getLogger("kontho.settings_ui")
 
 
+class HotkeyRecorderEdit(QLineEdit):
+    """Interactive hotkey recording input field."""
+
+    def __init__(self, text: str = "", parent: QWidget | None = None) -> None:
+        super().__init__(text, parent)
+        self.setPlaceholderText("Press desired key combination...")
+
+    def mousePressEvent(self, event) -> None:
+        super().mousePressEvent(event)
+        self.selectAll()
+
+    def keyPressEvent(self, event) -> None:
+        key = event.key()
+        if key in (Qt.Key_Control, Qt.Key_Shift, Qt.Key_Alt, Qt.Key_Meta):
+            mods = []
+            if event.modifiers() & Qt.ControlModifier:
+                mods.append("ctrl")
+            if event.modifiers() & Qt.ShiftModifier:
+                mods.append("shift")
+            if event.modifiers() & Qt.AltModifier:
+                mods.append("alt")
+            if event.modifiers() & Qt.MetaModifier:
+                mods.append("win")
+            self.setText("+".join(mods) + "+...")
+            return
+
+        parts = []
+        if event.modifiers() & Qt.ControlModifier:
+            parts.append("ctrl")
+        if event.modifiers() & Qt.ShiftModifier:
+            parts.append("shift")
+        if event.modifiers() & Qt.AltModifier:
+            parts.append("alt")
+        if event.modifiers() & Qt.MetaModifier:
+            parts.append("win")
+
+        key_name = QKeySequence(key).toString().lower()
+        if key == Qt.Key_Space:
+            key_name = "space"
+        elif key == Qt.Key_QuoteLeft:
+            key_name = "`"
+        elif key == Qt.Key_Tab:
+            key_name = "tab"
+        elif key_name:
+            key_name = key_name.split("+")[-1]
+
+        if key_name and key_name not in parts:
+            parts.append(key_name)
+
+        combo = "+".join(parts)
+        if combo:
+            self.setText(combo)
+
+
 class SettingsWindow(QWidget):
     hotkey_changed = Signal(str)
     model_changed = Signal(str)
@@ -58,7 +113,7 @@ class SettingsWindow(QWidget):
         self._controller = controller
 
         self.setWindowTitle("Kontho — Settings")
-        self.resize(520, 480)
+        self.resize(540, 500)
 
         tabs = QTabWidget(self)
         tabs.addTab(self._general_tab(), "General")
@@ -89,20 +144,30 @@ class SettingsWindow(QWidget):
         self._show_float.toggled.connect(lambda v: self._settings.update(show_floating=v))
         form.addRow(self._show_float)
 
-        self._hotkey = QLineEdit(cfg.hotkey)
-        self._hotkey.setPlaceholderText("ctrl+shift+space")
-        apply_hotkey = QPushButton("Apply")
+        self._hotkey = HotkeyRecorderEdit(cfg.hotkey)
+        apply_hotkey = QPushButton("Apply Hotkey")
         apply_hotkey.clicked.connect(self._on_hotkey_apply)
         row = QHBoxLayout()
         row.addWidget(self._hotkey)
         row.addWidget(apply_hotkey)
         holder = QWidget()
         holder.setLayout(row)
-        form.addRow("Push-to-talk hotkey", holder)
+        form.addRow("Hotkey", holder)
+
+        # Quick preset buttons
+        preset_row = QHBoxLayout()
+        for preset in ["ctrl+shift+space", "ctrl+space", "alt+space", "f8", "`"]:
+            btn = QPushButton(preset)
+            btn.setStyleSheet("font-size: 11px; padding: 3px 6px;")
+            btn.clicked.connect(lambda _, p=preset: self._apply_preset_hotkey(p))
+            preset_row.addWidget(btn)
+        preset_holder = QWidget()
+        preset_holder.setLayout(preset_row)
+        form.addRow("Presets", preset_holder)
 
         self._mode = QComboBox()
-        self._mode.addItem("Hold to talk", MODE_HOLD)
-        self._mode.addItem("Toggle listening", MODE_TOGGLE)
+        self._mode.addItem("Hold to talk (Push-to-Talk)", MODE_HOLD)
+        self._mode.addItem("Toggle listening (Start/Stop)", MODE_TOGGLE)
         self._mode.setCurrentIndex(0 if cfg.listen_mode == MODE_HOLD else 1)
         self._mode.currentIndexChanged.connect(
             lambda: self._settings.update(listen_mode=self._mode.currentData())
@@ -354,6 +419,10 @@ class SettingsWindow(QWidget):
         if not ok:
             QMessageBox.warning(self, "Kontho", f"Could not change startup setting:\n{message}")
             self._startup.setChecked(False)
+
+    def _apply_preset_hotkey(self, preset: str) -> None:
+        self._hotkey.setText(preset)
+        self._on_hotkey_apply()
 
     def _on_hotkey_apply(self) -> None:
         combo = self._hotkey.text().strip().lower()
