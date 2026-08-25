@@ -67,6 +67,7 @@ class TargetManager:
 
     def __init__(self) -> None:
         self._locked: TargetInfo | None = None
+        self._last_valid: TargetInfo | None = None
         self._own_pid = os.getpid()
 
     # -- querying ----------------------------------------------------------
@@ -96,7 +97,10 @@ class TargetManager:
             if pid == self._own_pid:
                 # Kontho's own overlay must never be dictated into.
                 return TargetInfo()
-            return TargetInfo(hwnd=hwnd, title=title, process=process, pid=pid)
+            target = TargetInfo(hwnd=hwnd, title=title, process=process, pid=pid)
+            if target.valid:
+                self._last_valid = target
+            return target
         except Exception as exc:
             log.debug("foreground lookup failed: %s", exc)
             return TargetInfo()
@@ -133,7 +137,12 @@ class TargetManager:
                 return self._locked
             log.warning("locked target has gone away; falling back to foreground")
             self._locked = None
-        return self.foreground()
+        fg = self.foreground()
+        if fg.valid:
+            return fg
+        if self._last_valid and self._last_valid.valid and _window_alive(self._last_valid.hwnd):
+            return self._last_valid
+        return fg
 
     def focus(self, target: TargetInfo) -> bool:
         """Bring a locked target forward so injected keys land in it."""

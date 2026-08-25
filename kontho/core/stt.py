@@ -176,19 +176,23 @@ class WhisperCppEngine(STTEngine):
             }
             log.info("loading model=%s device=%s use_gpu=%s threads=%s path=%s",
                      entry.id, device, use_gpu, threads, target)
+            # Ensure standard streams are valid files before pywhispercpp redirect_stderr flushes
+            import os
+            import sys
+            if sys.stdout is None:
+                sys.stdout = open(os.devnull, "w", encoding="utf-8")
+            if sys.stderr is None:
+                sys.stderr = open(os.devnull, "w", encoding="utf-8")
+
             try:
                 self._model = Model(
                     target,
                     context_params={"use_gpu": use_gpu},
-                    # Silence the model dump: under pythonw there is no console
-                    # to read it, and our own log already records the load.
                     redirect_whispercpp_logs_to=None,
                     **params,
                 )
-            except TypeError as exc:
-                # An older binding without context_params/redirect support.
-                log.warning("binding rejected quiet/device options (%s); "
-                            "loading with defaults", exc)
+            except (TypeError, AttributeError, Exception) as exc:
+                log.warning("binding initialisation fallback (%s); loading with basic params", exc)
                 self._model = Model(target, n_threads=max(1, int(threads)))
             self._entry = entry
             self._threads = threads

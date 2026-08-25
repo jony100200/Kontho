@@ -13,8 +13,17 @@ classic way to make a tray app crash after ten minutes, so nothing here does it.
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
+
+# Ensure standard streams are valid file objects under pythonw (GUI mode on Windows)
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+if sys.stdin is None:
+    sys.stdin = open(os.devnull, "r", encoding="utf-8")
 
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtWidgets import QApplication, QMessageBox, QSystemTrayIcon
