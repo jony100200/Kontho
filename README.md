@@ -136,7 +136,7 @@ python tests\record_test_voice.py --mixed  # Record 5s Mixed sample (mixed_sampl
   <br>
   <strong>Kalponic Studio</strong>
   <br>
-  Lead Developer: <strong>Jony</strong>
+  Lead Developer: <strong>Moinuddin Ahmed (Jony)</strong>
 </p>
 
 ---
