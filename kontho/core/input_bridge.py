@@ -145,7 +145,7 @@ class InputBridge:
         Pacing is not politeness, it is correctness. Sending the whole phrase
         in one SendInput call races the target's message pump: the text
         arrives with the right character COUNT but a corrupted tail, e.g.
-        "path: D:\\KSAppDev 100% ।।।।।।।।।।।।" instead of the real sentence.
+        "path: C:\\Projects\\App 100% ।।।।।।।।।।।।" instead of the real sentence.
         Measured against Notepad, verified from the saved file, the corruption
         disappears at roughly 12 ms per character; `pace_ms` keeps a margin
         over that and is configurable for slower targets.

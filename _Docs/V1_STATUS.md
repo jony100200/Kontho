@@ -66,7 +66,7 @@ future block (e.g. UIPI error 5 against an elevated window) names itself.
 ### 2. Batched injection outruns the target and corrupts the text
 
 With the struct fixed, text arrived with the right character *count* but a
-mangled tail — `path: D:\KSAppDev 100% ।।।।।।।।।।।।` instead of the sentence.
+mangled tail — `path: C:\Projects 100% ।।।।।।।।।।।।` instead of the sentence.
 The event array was verified correct in memory, so the corruption is the
 target's message pump losing the race.
 

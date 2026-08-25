@@ -1,14 +1,17 @@
 @echo off
-REM Launch Kontho with the root venv. pythonw keeps the console window away.
+REM Launch Kontho silently in the background (pythonw prevents console popup).
 setlocal
 set ROOT=%~dp0
-set VENV=D:\KSAppDev\.venv\Scripts
-REM `-m kontho` resolves against the working directory, so anchor it here.
 cd /d "%ROOT%"
-if exist "%VENV%\pythonw.exe" (
-    start "" "%VENV%\pythonw.exe" -m kontho %*
+
+REM Check local project virtualenv, parent workspace virtualenv, or system PATH
+if exist "%ROOT%.venv\Scripts\pythonw.exe" (
+    start "" "%ROOT%.venv\Scripts\pythonw.exe" -m kontho %*
+) else if exist "%ROOT%venv\Scripts\pythonw.exe" (
+    start "" "%ROOT%venv\Scripts\pythonw.exe" -m kontho %*
+) else if exist "%ROOT%..\.venv\Scripts\pythonw.exe" (
+    start "" "%ROOT%..\.venv\Scripts\pythonw.exe" -m kontho %*
 ) else (
-    echo Root venv not found at %VENV% - falling back to PATH python.
     start "" pythonw -m kontho %*
 )
 endlocal

@@ -47,7 +47,7 @@ CASES = [
     ("english", "This is a test of universal voice typing."),
     ("bengali", "আমি বাংলায় কথা বলছি।"),
     ("mixed", "আমি git commit করেছি database এ।"),
-    ("symbols", "path: D:\\KSAppDev — 100% done (yes!)"),
+    ("symbols", "path: /project/repo — 100% done (yes!)"),
     ("long", "The quick brown fox jumps over the lazy dog while the "
              "engineer commits code and pushes it upstream to origin main."),
 ]

@@ -141,7 +141,10 @@ python tests\record_test_voice.py --mixed  # Record 5s Mixed sample (mixed_sampl
 
 ---
 
-## Architecture & Standards
+## Architecture & Principles
 
-Kontho adheres strictly to the workspace engineering standards defined in `D:\KSAppDev\KS_ENGINEERING_STANDARD.md` and `D:\KSAppDev\Kontho\AGENTS.md`.
+Kontho is designed and engineered to studio-grade standards:
+- **Zero Cloud Telemetry**: 100% offline local inference on CPU or GPU.
+- **Focus Isolation**: Non-activating overlay (`WS_EX_NOACTIVATE`) that never steals focus or keystrokes from active editors.
+- **Deterministic Text Shaping**: Fast Unicode pacing and automatic terminal detection for developer environments.
 
