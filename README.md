@@ -11,14 +11,14 @@
   <img src="https://img.shields.io/badge/Languages-Bengali%20%2B%20English-2ea44f?style=flat-square" alt="Bengali + English">
   <img src="https://img.shields.io/badge/Engine-whisper.cpp-orange?style=flat-square" alt="whisper.cpp">
   <img src="https://img.shields.io/badge/Platform-Windows_10%20%2F%2011-blue?style=flat-square" alt="Windows 10/11">
-  <img src="https://img.shields.io/badge/License-Proprietary-lightgrey?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
 </p>
 
 ---
 
 ## What is Kontho?
 
-**Kontho** is a completely local, system-wide voice typing utility for Windows. Hold a hotkey anywhere, speak in **Bengali, English, or mixed Bengali-English technical speech**, and release. Your dictated words appear instantly in whatever editor, input box, browser, or terminal currently holds focus.
+**Kontho** is a completely local, system-wide voice typing utility for Windows. Hold or press a hotkey anywhere, speak in **Bengali, English, or mixed Bengali-English technical speech**, and the dictated words appear instantly in whatever editor, input box, browser, or terminal currently holds focus.
 
 - **100% Private & Local**: Zero audio and zero transcriptions ever leave your machine.
 - **Focus Isolation**: The floating pill and system tray never steal focus or interrupt your active workflow.
@@ -28,18 +28,26 @@
 
 ---
 
-## Quick Start
+## Installation & Quick Start
 
-### 1. Run Kontho
+### 1. Clone & Install Dependencies
+
+```bat
+git clone https://github.com/jony100200/Kontho.git
+cd Kontho
+pip install -r requirements.txt
+```
+
+### 2. Run Kontho
 
 ```bat
 run_kontho.bat
 ```
 
-*Or via Python:*
+*Or directly via Python:*
 
 ```bat
-D:\KSAppDev\.venv\Scripts\python.exe -m kontho
+python -m kontho
 ```
 
 On first launch, Kontho starts in the system tray and displays an unobtrusive floating pill. It automatically downloads the recommended **Whisper Small Q5_1** model (181 MiB) to `%LOCALAPPDATA%\Kontho\models`.
