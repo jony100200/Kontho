@@ -123,12 +123,15 @@ class AudioHeartbeatWidget(QWidget):
 class FloatingOverlay(QWidget):
     """Small always-on-top pill that shows state, audio heartbeat, and live preview."""
 
+    toggle_requested = Signal()
+    settings_requested = Signal()
     clicked = Signal()
 
     def __init__(self, settings_store):
         super().__init__(None)
         self._settings = settings_store
         self._drag_origin: QPoint | None = None
+        self._press_pos: QPoint | None = None
         self._state = State.READY
         self._volume = 0.0
         self._applied_native_style = False
@@ -241,6 +244,7 @@ class FloatingOverlay(QWidget):
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.LeftButton:
+            self._press_pos = event.globalPosition().toPoint()
             self._drag_origin = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
 
@@ -250,13 +254,27 @@ class FloatingOverlay(QWidget):
             event.accept()
 
     def mouseReleaseEvent(self, event) -> None:
-        if self._drag_origin is not None:
-            self._drag_origin = None
-            self._persist_position()
+        if event.button() == Qt.LeftButton:
+            is_click = (
+                self._press_pos is not None
+                and (event.globalPosition().toPoint() - self._press_pos).manhattanLength() < 6
+            )
+            if self._drag_origin is not None:
+                self._drag_origin = None
+                self._persist_position()
+            self._press_pos = None
+            if is_click:
+                self.toggle_requested.emit()
             event.accept()
 
     def mouseDoubleClickEvent(self, event) -> None:
-        self.clicked.emit()
+        if event.button() == Qt.LeftButton:
+            self.settings_requested.emit()
+            self.clicked.emit()
+            event.accept()
+
+    def contextMenuEvent(self, event) -> None:
+        self.settings_requested.emit()
         event.accept()
 
     # -- position ----------------------------------------------------------

@@ -49,9 +49,24 @@ log = logging.getLogger("kontho.settings_ui")
 class HotkeyRecorderEdit(QLineEdit):
     """Interactive hotkey recording input field."""
 
+    key_recorded = Signal(str)
+
     def __init__(self, text: str = "", parent: QWidget | None = None) -> None:
         super().__init__(text, parent)
-        self.setPlaceholderText("Press desired key combination...")
+        self.setPlaceholderText("Press any key (e.g. F8, Ctrl+Space, `)...")
+        self._recording = False
+
+    def start_recording(self) -> None:
+        self._recording = True
+        self.setStyleSheet("border: 2px solid #FF4B5C; background-color: #2D2228; color: #FFFFFF;")
+        self.setPlaceholderText("🔴 Listening for key press... Press any key on keyboard")
+        self.clear()
+        self.setFocus()
+
+    def stop_recording(self) -> None:
+        self._recording = False
+        self.setStyleSheet("")
+        self.setPlaceholderText("Press any key (e.g. F8, Ctrl+Space, `)...")
 
     def mousePressEvent(self, event) -> None:
         super().mousePressEvent(event)
@@ -98,6 +113,8 @@ class HotkeyRecorderEdit(QLineEdit):
         combo = "+".join(parts)
         if combo:
             self.setText(combo)
+            self.stop_recording()
+            self.key_recorded.emit(combo)
 
 
 class SettingsWindow(QWidget):
@@ -144,19 +161,31 @@ class SettingsWindow(QWidget):
         self._show_float.toggled.connect(lambda v: self._settings.update(show_floating=v))
         form.addRow(self._show_float)
 
+        hint = QLabel("Press the button you desire to press the hotkey, or type it:")
+        hint.setStyleSheet("color: #00D2FF; font-weight: 600; margin-top: 6px;")
+        form.addRow(hint)
+
         self._hotkey = HotkeyRecorderEdit(cfg.hotkey)
-        apply_hotkey = QPushButton("Apply Hotkey")
+        self._hotkey.key_recorded.connect(self._on_key_auto_recorded)
+
+        self._record_btn = QPushButton("⏺ Record Key")
+        self._record_btn.setToolTip("Click to record any key press directly from your keyboard")
+        self._record_btn.clicked.connect(self._hotkey.start_recording)
+
+        apply_hotkey = QPushButton("Apply")
         apply_hotkey.clicked.connect(self._on_hotkey_apply)
+
         row = QHBoxLayout()
-        row.addWidget(self._hotkey)
-        row.addWidget(apply_hotkey)
+        row.addWidget(self._hotkey, stretch=3)
+        row.addWidget(self._record_btn, stretch=1)
+        row.addWidget(apply_hotkey, stretch=1)
         holder = QWidget()
         holder.setLayout(row)
         form.addRow("Hotkey", holder)
 
         # Quick preset buttons
         preset_row = QHBoxLayout()
-        for preset in ["ctrl+shift+space", "ctrl+space", "alt+space", "f8", "`"]:
+        for preset in ["ctrl+shift+space", "ctrl+space", "alt+space", "f8", "f9", "`"]:
             btn = QPushButton(preset)
             btn.setStyleSheet("font-size: 11px; padding: 3px 6px;")
             btn.clicked.connect(lambda _, p=preset: self._apply_preset_hotkey(p))
@@ -167,7 +196,7 @@ class SettingsWindow(QWidget):
 
         self._mode = QComboBox()
         self._mode.addItem("Hold to talk (Push-to-Talk)", MODE_HOLD)
-        self._mode.addItem("Toggle listening (Start/Stop)", MODE_TOGGLE)
+        self._mode.addItem("Toggle listening (Start/Stop with click or hotkey)", MODE_TOGGLE)
         self._mode.setCurrentIndex(0 if cfg.listen_mode == MODE_HOLD else 1)
         self._mode.currentIndexChanged.connect(
             lambda: self._settings.update(listen_mode=self._mode.currentData())
@@ -419,6 +448,9 @@ class SettingsWindow(QWidget):
         if not ok:
             QMessageBox.warning(self, "Kontho", f"Could not change startup setting:\n{message}")
             self._startup.setChecked(False)
+
+    def _on_key_auto_recorded(self, combo: str) -> None:
+        self._on_hotkey_apply()
 
     def _apply_preset_hotkey(self, preset: str) -> None:
         self._hotkey.setText(preset)

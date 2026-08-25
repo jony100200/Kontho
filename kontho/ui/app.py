@@ -76,7 +76,8 @@ class KonthoApp:
         self.tray = KonthoTray(self.settings, self.registry)
         self.settings_window: SettingsWindow | None = None
 
-        self.overlay.clicked.connect(self._open_settings)
+        self.overlay.toggle_requested.connect(self.controller.toggle)
+        self.overlay.settings_requested.connect(self._open_settings)
         self.tray.start_requested.connect(self.controller.start_listening)
         self.tray.stop_requested.connect(self.controller.stop_listening)
         self.tray.toggle_overlay_requested.connect(self._toggle_overlay)
