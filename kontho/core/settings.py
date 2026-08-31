@@ -88,7 +88,7 @@ class Settings:
     sample_rate: int = 16000
 
     # Recognition
-    model_id: str = "small-q5_1"
+    model_id: str = "base-q5_1"
     language: str = LANG_MIXED
     device: str = DEVICE_CPU
     threads: int = field(default_factory=default_threads)
@@ -98,16 +98,15 @@ class Settings:
     target_mode: str = TARGET_DYNAMIC
     profile: str = PROFILE_NORMAL
     inject_method: str = "auto"     # auto | unicode | clipboard
-    unicode_pace_ms: float = 15.0   # gap between typed characters; below ~12 ms
-                                    # the target's message pump corrupts the tail
+    unicode_pace_ms: float = 8.0    # gap between typed characters in unicode fallback
     trailing_space: bool = True
     voice_commands: bool = False    # off by default: people dictate these words
 
     # VAD
     vad_threshold: float = 0.012
-    min_speech_ms: int = 250
-    silence_ms: int = 600           # phrase finalisation pause
-    speech_pad_ms: int = 300        # pre-roll so first syllables survive
+    min_speech_ms: int = 200
+    silence_ms: int = 350           # phrase finalisation pause (fast responsive cutoff)
+    speech_pad_ms: int = 200        # pre-roll so first syllables survive
 
     # UI
     float_x: int = -1

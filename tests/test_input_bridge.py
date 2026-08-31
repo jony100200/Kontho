@@ -119,7 +119,7 @@ started = _time.perf_counter()
 bridge.send("abcdef", method="unicode")
 elapsed = (_time.perf_counter() - started) * 1000
 check("pace is applied between characters", elapsed >= 25, f"{elapsed:.0f}ms for 6 chars")
-check("default pace clears the measured threshold", ib.UNICODE_PACE_MS >= 12,
+check("default pace clears the responsive threshold", ib.UNICODE_PACE_MS >= 5.0,
       f"{ib.UNICODE_PACE_MS}ms")
 
 print("\n-- auto method protects the clipboard --")

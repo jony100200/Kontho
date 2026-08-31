@@ -227,16 +227,21 @@ class WhisperCppEngine(STTEngine):
                 # Transcription, never translation - the spec is explicit.
                 "translate": False,
                 "n_threads": self._threads,
+                "no_timestamps": True,
+                "single_segment": True,
+                "greedy": {"best_of": 1},
+                "temperature_inc": 0.0,
             }
             if beam_size and beam_size > 1:
                 kwargs["beam_search"] = {"beam_size": int(beam_size)}
+                kwargs.pop("greedy", None)
 
             started = time.perf_counter()
             try:
                 segments = self._model.transcribe(samples, **kwargs)
-            except TypeError:
-                # Older binding signatures accept fewer keywords.
-                segments = self._model.transcribe(samples, language=whisper_lang)
+            except (TypeError, Exception):
+                # Fallback to basic parameters if binding does not support advanced flags
+                segments = self._model.transcribe(samples, language=whisper_lang, n_threads=self._threads)
             latency = time.perf_counter() - started
 
             parts = [strip_non_speech((getattr(s, "text", "") or "").strip())

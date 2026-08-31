@@ -19,9 +19,9 @@ from kontho.core.stt import STTEngine, create_engine
 def engine() -> STTEngine:
     """Shared initialized STTEngine with installed model for transcription tests."""
     registry = ModelRegistry()
-    default = registry.get("small-q5_1")
+    default = registry.get(SettingsStore().value.model_id) or registry.get("base-q5_1")
     if not default or not registry.is_installed(default):
-        default = next((registry.get(m) for m in ("base-q5_1", "tiny-q5_1")
+        default = next((registry.get(m) for m in ("base-q5_1", "small-q5_1", "tiny-q5_1")
                         if registry.is_installed(registry.get(m))), None)
     eng = create_engine("whispercpp")
     if default is not None:

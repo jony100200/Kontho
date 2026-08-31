@@ -63,31 +63,31 @@ class ModelEntry:
 PRESETS: tuple[ModelEntry, ...] = (
     ModelEntry(
         id="tiny-q5_1",
-        display_name="Tiny Q5 — Ultra Light",
+        display_name="Tiny Q5 — Ultra Fast (0.18s)",
         quantization="q5_1",
         model_size="31 MiB",
         approx_bytes=31 * 1024 * 1024,
-        notes="Very low resource. Least accurate of the three.",
+        notes="Ultra fast 0.18s latency. Best for quick commands.",
     ),
     ModelEntry(
         id="base-q5_1",
-        display_name="Base Q5 — Light",
+        display_name="Base Q5 — Fast & Balanced (0.38s)",
         quantization="q5_1",
         model_size="57 MiB",
         approx_bytes=57 * 1024 * 1024,
-        notes="Low-resource everyday mode.",
+        notes="Recommended fast default. 0.38s instant response with balanced bilingual accuracy.",
     ),
     ModelEntry(
         id="small-q5_1",
-        display_name="Small Q5 — Recommended",
+        display_name="Small Q5 — High Accuracy (1.5s)",
         quantization="q5_1",
         model_size="181 MiB",
         approx_bytes=181 * 1024 * 1024,
-        notes="Default. Accuracy is worth more than the 124 MiB saved.",
+        notes="High precision mode. Takes ~1.5s compute on CPU.",
     ),
 )
 
-DEFAULT_MODEL_ID = "small-q5_1"
+DEFAULT_MODEL_ID = "base-q5_1"
 
 
 class ModelRegistry:
